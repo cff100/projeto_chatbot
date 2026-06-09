@@ -1,0 +1,24 @@
+# Ambiente Virtual (Dependências locais)
+venv/
+.venv/
+env/
+ENV/
+
+# Cache do Python e arquivos compilados
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Configurações de ambiente e Chaves de API (CRÍTICO)
+.env
+
+# Configurações locais do Streamlit
+.streamlit/secrets.toml
+
+# Banco de Dados Local
+dados/
+
+# Arquivos temporários do Sistema Operacional
+.DS_Store
+Thumbs.db
