@@ -1,0 +1,1 @@
+database_example.db: Banco de dados SQLite (exemplo para o projeto)

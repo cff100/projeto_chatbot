@@ -1,11 +1,15 @@
 """Script rápido para criar e popular o banco de dados"""
 
-
 import sqlite3
 
-def criar_banco_exemplo():
+from paths import DATABASE_EXAMPLE
+
+def create_example_database():
+
+    DATABASE_EXAMPLE.parent.mkdir(parents=True, exist_ok=True)
+
     # Conecta (ou cria) o arquivo do banco de dados
-    conn = sqlite3.connect("dados/database.db")
+    conn = sqlite3.connect(DATABASE_EXAMPLE)
     cursor = conn.cursor()
 
     # Criando tabelas de exemplo (Produtos e Vendas)
@@ -46,4 +50,4 @@ def criar_banco_exemplo():
     print("Banco de dados configurado com sucesso!")
 
 if __name__ == "__main__":
-    criar_banco_exemplo()
+    create_example_database()
