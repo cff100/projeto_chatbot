@@ -146,4 +146,49 @@ for msg in st.session_state.mensagens:
 # ==========================================
 # O ':=' é o "Walrus Operator" do Python. Ele faz duas coisas ao mesmo tempo:
 # 1. Desenha a barra de digitar na parte inferior (st.chat_input)
-# 2. Se o usuário apert
+# 2. Se o usuário apertar Enter, ele salva o texto na variável 'pergunta' e entra no 'if'
+if pergunta := st.chat_input("Faça uma pergunta..."):
+    
+    # --- PREPARAÇÃO DO CONTEXTO PARA O BACKEND ---
+    # O nosso backend espera receber o histórico como um texto longo.
+    # Ex: "Usuário: Olá\nAssistente: Oi!"
+    # Então, varremos o 'session_state' e montamos essa string (historico_formatado).
+    historico_formatado = ""
+    for msg in st.session_state.mensagens:
+        origem = "Usuário" if msg["role"] == "user" else "Assistente"
+        historico_formatado += f"{origem}: {msg['content']}\n"
+    
+    # --- ATUALIZAÇÃO DA TELA (USUÁRIO) ---
+    # Salva a nova pergunta na memória do Streamlit e já desenha na tela
+    st.session_state.mensagens.append({"role": "user", "content": pergunta})
+    with st.chat_message("user"):
+        st.markdown(pergunta)
+    
+    # --- RESPOSTA DO ROBÔ ---
+    with st.chat_message("assistant"):
+        # Coloca a animação de "carregando..." enquanto o backend faz a mágica
+        with st.spinner("Analisando contexto e banco de dados..."):
+            
+            # Chama o método que programamos no backend.py!
+            # Passamos a pergunta atual E o histórico acumulado.
+            resultado = st.session_state.bot.perguntar(pergunta, historico_formatado)
+            
+            # Se não houve erros no SQL ou na OpenAI:
+            if resultado["sucesso"]:
+                # Mostra a resposta em texto
+                st.markdown(resultado["resposta"])
+                
+                # Mostra o código do banco de dados
+                if resultado["query_sql"] != "-- NAO_SQL":
+                    with st.expander("Ver código SQL gerado"):
+                        st.code(resultado["query_sql"], language="sql")
+                
+                # Salva a resposta do robô na memória para que ela não suma na próxima recarga
+                st.session_state.mensagens.append({
+                    "role": "assistant",
+                    "content": resultado["resposta"],
+                    "sql": resultado["query_sql"]
+                })
+            else:
+                # Se der erro (ex: sem internet), mostra a mensagem em vermelho
+                st.error(resultado["resposta"])
