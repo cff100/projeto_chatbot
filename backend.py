@@ -110,7 +110,8 @@ class ChatbotSQLBackend():
         # português amigável (ex: "Temos 50 unidades no estoque!").
         prompt_resposta = ChatPromptTemplate.from_template(
             """Dado o histórico da conversa, o comando SQL gerado e o resultado obtido do banco, responda de forma natural, amigável e concisa à última pergunta do usuário. 
-            Não há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'. Caso não haja informações disponíveis que respondam ao usuário, diga que não possui informações.
+            Não há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'. 
+            Caso não haja informações disponíveis que respondam ao usuário ou a pergunta não esteja relacionada, diga que não possui informações.
             
             Histórico da Conversa:
             {historico_texto}
