@@ -62,7 +62,7 @@ class ChatbotSQLBackend():
 
     def _construir_pipeline(self):
         """
-        Constrói a "linha de montagem" (Pipeline) usando LCEL.
+        Constrói a "linha de montagem" (Pipeline) usando LCEL. Adiciona travas de segurança para fora de escopo.
         O operador '|' (pipe) significa "pegue o resultado disso e passe para o próximo passo".
         """
         
@@ -93,7 +93,11 @@ class ChatbotSQLBackend():
         # Com a pergunta bem clara, pedimos para a IA escrever o código SQL.
         prompt_geracao_sql = ChatPromptTemplate.from_template(
             """Você é um especialista em banco de dados. Dada a pergunta do usuário, crie uma query SQL válida em {dialeto} para responder à pergunta.
-            Retorne APENAS a query SQL pura, sem formatação markdown (não use ```sql).
+
+            REGRA DE SEGURANÇA ABSOLUTA: 
+            Se a pergunta do usuário for uma saudação (ex: "Olá", "Bom dia"), uma conversa informal, um teste ("Isso é um teste"), ou QUALQUER assunto que não tenha absolutamente nada a ver com as tabelas do banco de dados abaixo, você NÃO DEVE criar um comando SQL. Em vez disso, retorne exatamente o texto: -- NAO_SQL
+            
+            Retorne APENAS a query SQL pura ou o texto '-- NAO_SQL', sem formatação markdown (nunca use ```sql).
 
             Estrutura das Tabelas (Schema):
             {informacao_tabelas}
@@ -111,7 +115,10 @@ class ChatbotSQLBackend():
         prompt_resposta = ChatPromptTemplate.from_template(
             """Dado o histórico da conversa, o comando SQL gerado e o resultado obtido do banco, responda de forma natural, amigável e concisa à última pergunta do usuário. 
             Não há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'. 
-            Caso não haja informações disponíveis que respondam ao usuário ou a pergunta não esteja relacionada, diga que não possui informações.
+
+            DIRETRIZES DE RESPOSTA:
+            1. Se o 'Comando SQL Gerado' for '-- NAO_SQL', significa que o usuário fez uma saudação, teste ou pergunta fora de escopo. Apenas responda de forma educada, natural e amigável (ex: "Olá! Como posso ajudar você com nossas consultas de dados hoje?"), sem tentar inventar tabelas ou dados falsos.
+            2. Se o 'Comando SQL Gerado' for uma query real, use o 'Resultado do Banco' para formular uma resposta clara, natural e concisa em português.
             
             Histórico da Conversa:
             {historico_texto}
@@ -151,6 +158,7 @@ class ChatbotSQLBackend():
             )
             
             # Passo 3: Cria a chave 'result' executando a 'query' (gerada no Passo 2) no banco real.
+            # Se a query for '-- NAO_SQL', o executor roda como um comentário limpo no SQLite e retorna string vazia ""
             .assign(result=itemgetter("query") | self.executor_sql)
             
             # Passo 4: Cria a chave 'answer' (a resposta final) passando tudo que juntamos até agora para a última IA.

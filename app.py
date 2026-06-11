@@ -77,7 +77,7 @@ for msg in st.session_state.mensagens:
         
         # Se na mensagem salva existir a chave "sql" (e ela não for um erro N/A),
         # nós desenhamos o componente que permite expandir e ver o código SQL.
-        if "sql" in msg and msg["sql"] != "N/A":
+        if "sql" in msg and msg["sql"] != "N/A" and msg["sql"] != "-- NAO_SQL":
             with st.expander("Ver código SQL gerado"):
                 st.code(msg["sql"], language="sql")
 
@@ -119,9 +119,10 @@ if pergunta := st.chat_input("Faça uma pergunta..."):
                 # Mostra a resposta em texto
                 st.markdown(resultado["resposta"])
                 
-                # Mostra o código do banco de dados (o professor vai adorar ver isso)
-                with st.expander("Ver código SQL gerado"):
-                    st.code(resultado["query_sql"], language="sql")
+                # Mostra o código do banco de dados
+                if resultado["query_sql"] != "-- NAO_SQL":
+                    with st.expander("Ver código SQL gerado"):
+                        st.code(resultado["query_sql"], language="sql")
                 
                 # Salva a resposta do robô na memória para que ela não suma na próxima recarga
                 st.session_state.mensagens.append({
