@@ -113,12 +113,12 @@ class ChatbotSQLBackend():
         # Pega a resposta "fria e feia" do banco de dados (ex: [(50,)]) e transforma em 
         # português amigável (ex: "Temos 50 unidades no estoque!").
         prompt_resposta = ChatPromptTemplate.from_template(
-            """Dado o histórico da conversa, o comando SQL gerado e o resultado obtido do banco, responda de forma natural, amigável e concisa à última pergunta do usuário. 
-            Não há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'. 
-
+            """
             DIRETRIZES DE RESPOSTA:
-            1. Se o 'Comando SQL Gerado' for '-- NAO_SQL', significa que o usuário fez uma saudação, teste ou pergunta fora de escopo. Apenas responda de forma educada, natural e amigável (ex: "Olá! Como posso ajudar você com nossas consultas de dados hoje?"), sem tentar inventar tabelas ou dados falsos.
-            2. Se o 'Comando SQL Gerado' for uma query real, use o 'Resultado do Banco' para formular uma resposta clara, natural e concisa em português.
+            1. Dado o histórico da conversa, o comando SQL gerado e o resultado obtido do banco, responda de forma natural, amigável e concisa à última pergunta do usuário. 
+            2. há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'. 
+            3. Se o 'Comando SQL Gerado' for '-- NAO_SQL', significa que o usuário fez uma saudação, teste ou pergunta fora de escopo. Apenas responda de forma educada, natural e amigável (ex: "Olá! Como posso ajudar você com nossas consultas de dados hoje?"), sem tentar inventar tabelas ou dados falsos.
+            4. Se o 'Comando SQL Gerado' for uma query real, use o 'Resultado do Banco' para formular uma resposta clara, natural e concisa em português.
             
             Histórico da Conversa:
             {historico_texto}
