@@ -103,7 +103,6 @@ class ChatbotSQLBackend():
             }
 
 # Teste rápido do backend
-# Teste rápido do backend
 if __name__ == "__main__":
     from paths import DATABASE_EXAMPLE
     
@@ -124,6 +123,6 @@ if __name__ == "__main__":
     # ---------------------------------------
 
     bot = ChatbotSQLBackend(DATABASE_EXAMPLE)
-    resultado = bot.perguntar("Qual o produto mais vendido e sua quantidade?")
+    resultado = bot.perguntar("Qual o produto mais vendido e sua quantidade e qual o produto que gerou mais receita?")
     print(f"SQL Executado: {resultado['query_sql']}\n")
     print(f"Resposta do Bot: {resultado['resposta']}")
