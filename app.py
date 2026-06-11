@@ -62,7 +62,7 @@ with st.sidebar:
         st.rerun() # Força o Streamlit a recarregar a tela do zero para refletir a limpeza
 
 # Título principal da página central
-st.title("📊 Chatbot Inteligente de Dadosaaaaaa")
+st.title("📊 Chatbot Inteligente de Dados")
 
 
 # ==========================================

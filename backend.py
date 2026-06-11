@@ -110,7 +110,7 @@ class ChatbotSQLBackend():
         # português amigável (ex: "Temos 50 unidades no estoque!").
         prompt_resposta = ChatPromptTemplate.from_template(
             """Dado o histórico da conversa, o comando SQL gerado e o resultado obtido do banco, responda de forma natural, amigável e concisa à última pergunta do usuário. 
-            Não há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'
+            Não há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'. Caso não haja informações disponíveis que respondam ao usuário, diga que não possui informações.
             
             Histórico da Conversa:
             {historico_texto}
@@ -190,7 +190,7 @@ class ChatbotSQLBackend():
 
 # Teste rápido do backend
 if __name__ == "__main__":
-    
+
     # Importa o caminho do banco de exemplo só para testar no terminal
     from paths import DATABASE_EXAMPLE
     
