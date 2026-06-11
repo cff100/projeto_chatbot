@@ -94,9 +94,14 @@ class ChatbotSQLBackend():
         prompt_geracao_sql = ChatPromptTemplate.from_template(
             """Você é um especialista em banco de dados. Dada a pergunta do usuário, crie uma query SQL válida em {dialeto} para responder à pergunta.
 
-            REGRA DE SEGURANÇA ABSOLUTA: 
-            Se a pergunta do usuário for uma saudação (ex: "Olá", "Bom dia"), uma conversa informal, um teste ("Isso é um teste"), ou QUALQUER assunto que não tenha absolutamente nada a ver com as tabelas do banco de dados abaixo, você NÃO DEVE criar um comando SQL. Em vez disso, retorne exatamente o texto: -- NAO_SQL
+            ⚙️ REGRAS DE ESCOPO DE DADOS:
+            1. Se o usuário perguntar quais tabelas existem ou o que tem no banco, gere: SELECT name FROM sqlite_master WHERE type='table';
+            2. Se o usuário pedir para mostrar dados de uma tabela qualquer (sem especificar), escolha uma das tabelas do Schema abaixo e faça um SELECT com LIMIT 3 nela.
+            3. Se a pergunta for sobre dados específicos, faça a query lógica normal baseada no Schema abaixo.
             
+            ⚠️ REGRA DE SEGURANÇA (CONVERSA FIADA): 
+            Apenas retorne '-- NAO_SQL' se a pergunta for PURAMENTE social, informal ou um teste vazio (ex: "Olá", "Tudo bem?", "Quem é você?", "Isso é um teste") que não tenha nenhuma relação com dados, listagem de tabelas ou estrutura.
+
             Retorne APENAS a query SQL pura ou o texto '-- NAO_SQL', sem formatação markdown (nunca use ```sql).
 
             Estrutura das Tabelas (Schema):
@@ -113,12 +118,14 @@ class ChatbotSQLBackend():
         # Pega a resposta "fria e feia" do banco de dados (ex: [(50,)]) e transforma em 
         # português amigável (ex: "Temos 50 unidades no estoque!").
         prompt_resposta = ChatPromptTemplate.from_template(
-            """
-            DIRETRIZES DE RESPOSTA:
-            1. Dado o histórico da conversa, o comando SQL gerado e o resultado obtido do banco, responda de forma natural, amigável e concisa à última pergunta do usuário. 
-            2. há a necessidade de terminar com frases como 'Se precisar de mais alguma informação, é só avisar! e semelhantes'. 
-            3. Se o 'Comando SQL Gerado' for '-- NAO_SQL', significa que o usuário fez uma saudação, teste ou pergunta fora de escopo. Apenas responda de forma educada, natural e amigável (ex: "Olá! Como posso ajudar você com nossas consultas de dados hoje?"), sem tentar inventar tabelas ou dados falsos.
-            4. Se o 'Comando SQL Gerado' for uma query real, use o 'Resultado do Banco' para formular uma resposta clara, natural e concisa em português.
+            """Você é um assistente de banco de dados inteligente, direto e profissional. 
+            Analise a última pergunta do usuário, o comando SQL gerado e o resultado do banco para responder ao usuário.
+            
+            🛑 DIRETRIZES CRUCIAIS DE ESTILO (ANTI-REPETIÇÃO):
+            1. OLHE O HISTÓRICO: Se você já cumprimentou o usuário nas mensagens anteriores (disse "Olá", "Bom dia", etc), NÃO repita a saudação de forma alguma. Vá direto ao ponto.
+            2. PROIBIDO CHICHÉS: Nunca termine suas respostas com a mesma frase pronta (ex: "Se precisar de mais alguma informação, é só avisar"). Varie seus encerramentos ou apenas termine de forma direta e natural.
+            3. Se o 'Comando SQL Gerado' for '-- NAO_SQL', responda à saudação ou interação informal de forma curta, simpática e objetiva.
+            4. Se o resultado do banco for uma lista de tabelas, cite os nomes delas de forma clara para o usuário.
             
             Histórico da Conversa:
             {historico_texto}
