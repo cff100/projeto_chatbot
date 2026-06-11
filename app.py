@@ -8,6 +8,7 @@ novamente. Por isso, usamos o "session_state" para salvar coisas que não
 podem ser esquecidas entre as recargas da página (como o histórico do chat).
 """
 
+from pathlib import Path
 import streamlit as st
 from backend import ChatbotSQLBackend # Importa o nosso motor de inteligência criado no backend.py
 from paths import DATABASE_EXAMPLE # Importa o caminho do banco de exemplo de dados padronizado
@@ -34,6 +35,7 @@ if "bot" not in st.session_state:
     # Só cria o bot na PRIMEIRA vez que o usuário abrir a página
     st.session_state.bot = ChatbotSQLBackend(DATABASE_EXAMPLE)
 
+
 # ==========================================
 # 3. INICIALIZAÇÃO DO HISTÓRICO DE MENSAGENS
 # ==========================================
@@ -48,25 +50,62 @@ if "mensagens" not in st.session_state:
         "content": "Olá! Sou seu assistente de banco de dados com memória de contexto. O que deseja consultar hoje?"
     })
 
+
 # ==========================================
 # 4. MENU LATERAL (SIDEBAR)
 # ==========================================
 # Tudo que for colocado dentro do bloco 'with st.sidebar' vai 
 # aparecer em uma barra lateral esquerda da página.
 with st.sidebar:
-    st.title("🤖 Configurações")
+    st.title("⚙️ Configurações do Sistema")
     
-    # Botão para resetar a memória do robô e limpar a tela
+    # CRIANDO A VARIÁVEL DO BANCO DE DADOS:
+    # st.text_input cria uma caixa de texto. O 'value' é o valor padrão inicial.
+    # Convertemos o DATABASE_EXAMPLE para string para exibir bonitinho na caixa.
+    caminho_banco_variavel = st.text_input(
+        "Caminho do Banco de Dados (SQLite):",
+        value=str(DATABASE_EXAMPLE),
+        help="Digite o caminho do arquivo .db ou .sqlite que deseja consultar."
+    )
+    
+    # st.markdown("---")
+    # st.markdown("**Integrantes do Grupo:**\n- Aluno 1\n- Aluno 2")
+    
+    # Botão manual de limpar conversa
     if st.button("🗑️ Limpar Conversa"):
-        st.session_state.mensagens = [] # Zera a lista de histórico
-        st.rerun() # Força o Streamlit a recarregar a tela do zero para refletir a limpeza
+        st.session_state.mensagens = []
+        st.rerun()
 
 # Título principal da página central
 st.title("📊 Chatbot Inteligente de Dados")
 
+# ==========================================
+# 5. GERENCIAMENTO DINÂMICO DO BACKEND
+# ==========================================
+# Criamos uma chave chamada 'banco_atual' no session_state.
+# Se o usuário mudar o texto na caixa lateral, o 'caminho_banco_variavel' vai ficar diferente
+# do 'banco_atual'. Quando isso acontecer, o 'if' abaixo é disparado!
+if "banco_atual" not in st.session_state or st.session_state.banco_atual != caminho_banco_variavel:
+    
+    # 1. Atualiza qual é o banco que está ativo no momento
+    st.session_state.banco_atual = caminho_banco_variavel
+    
+    # 2. Reinicializa o Backend passando a NOVA variável de caminho
+    # Isso destrói o bot antigo e cria um novo conectado ao novo arquivo!
+    st.session_state.bot = ChatbotSQLBackend(Path(caminho_banco_variavel))
+    
+    # 3. Limpa o histórico de mensagens anteriores.
+    # IMPORTANTE: Se mudamos o banco de dados, o histórico antigo não faz mais sentido,
+    # pois o novo banco tem tabelas e dados completamente diferentes!
+    st.session_state.mensagens = []
+    st.session_state.mensagens.append({
+        "role": "assistant", 
+        "content": f"🔄 Conexão alterada com sucesso! Agora estou conectado ao banco: `{caminho_banco_variavel}`. O que deseja consultar nesta nova base?"
+    })
+
 
 # ==========================================
-# 5. RENDERIZAÇÃO DO HISTÓRICO NA TELA
+# 6. RENDERIZAÇÃO DO HISTÓRICO NA TELA
 # ==========================================
 # Como o Streamlit recarrega a página a cada interação, precisamos 
 # redesenhar todas as mensagens passadas na tela.
@@ -83,7 +122,7 @@ for msg in st.session_state.mensagens:
 
 
 # ==========================================
-# 6. ENTRADA DO USUÁRIO E PROCESSAMENTO
+# 7. ENTRADA DO USUÁRIO E PROCESSAMENTO
 # ==========================================
 # O ':=' é o "Walrus Operator" do Python. Ele faz duas coisas ao mesmo tempo:
 # 1. Desenha a barra de digitar na parte inferior (st.chat_input)
