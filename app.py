@@ -18,7 +18,7 @@ from paths import DATABASE_EXAMPLE # Importa o caminho do banco de exemplo de da
 # Define como a aba do navegador vai aparecer. 
 # "layout='centered'" mantém o chat no meio da tela (estilo ChatGPT).
 st.set_page_config(
-    page_title="Chatbot DBa",
+    page_title="Chatbot DB",
     page_icon="📊",
     layout="centered"
 )
@@ -62,7 +62,7 @@ with st.sidebar:
         st.rerun() # Força o Streamlit a recarregar a tela do zero para refletir a limpeza
 
 # Título principal da página central
-st.title("📊 Chatbot Inteligente de Dados")
+st.title("📊 Chatbot Inteligente de Dadosaaaaaa")
 
 
 # ==========================================
