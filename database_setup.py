@@ -1,10 +1,10 @@
 """Script rápido para criar e popular o banco de dados"""
 
 import sqlite3
-import csv
+import pandas as pd
 
 from paths import CSV_FOLDER
-from paths import DATABASE_EXAMPLE
+from paths import DATABASE_EXAMPLE, DATA_FOLDER, CENTRAL_DATABASE
 
 def create_example_database():
 
@@ -52,68 +52,64 @@ def create_example_database():
     print("Banco de dados configurado com sucesso!")
 
 
-def import_csv_to_table(csv_name: str, table_name: str, columns: list, create_new_db: bool = True):
+def import_csv_to_table(csv_name: str, create_new_db: bool = False):
     """
-    Lê um arquivo CSV e insere os dados na tabela SQL correspondente.
+    Lê um arquivo CSV usando Pandas e exporta direto para o SQLite.
     
-    :param csv_name: Nome do arquivo CSV (localizado na pasta CSV_FOLDER).
-    :param table_name: Nome da tabela onde os dados serão inseridos.
-    :param columns: Lista com o nome das colunas na ordem em que aparecem no CSV.
+    :param csv_name: Nome do arquivo CSV.
     :param create_new_db: Se True, cria um novo banco de dados com o nome da tabela.
     """
 
-    table_name = table_name.replace("-", "_").replace(" ", "_")
+    table_name = csv_name.split(".")[0]  # Usa o nome do arquivo CSV como nome da tabela
+    table_name = table_name.replace("-", "_").replace(" ", "_") # Sanitiza o nome da tabela (remove hifens e espaços)
+    
     csv_path = CSV_FOLDER / csv_name
-
     if not csv_path.exists():
         print(f"Erro: O arquivo {csv_path} não foi encontrado.")
         return
 
-    # Define qual banco de dados usar
+    # Define o banco de dados destino
     if create_new_db:
-        # Cria o caminho para o novo banco na mesma pasta do banco padrão, ex: caminho/para/vendas.db
-        db_path = DATABASE_EXAMPLE.parent / f"{table_name}.db"
+
+        db_path = DATA_FOLDER / f"{table_name}.db"
         print(f"Criando/Conectando ao novo banco de dados: {db_path.name}")
     else:
-        db_path = DATABASE_EXAMPLE
+        db_path = CENTRAL_DATABASE
 
-    cleaned_columns = [col.strip().replace("\ufeff", "") for col in columns]
-
-    # Monta a query de inserção dinamicamente: INSERT INTO tabela (col1, col2) VALUES (?, ?)
-    placeholders = ", ".join(["?"] * len(cleaned_columns))
-    columns_str = ", ".join([f'"{col}"' for col in cleaned_columns])
-    insert_query = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})"
+    # CORREÇÃO 2: Inicializa a variável como None para evitar o UnboundLocalError
+    conn = None
 
     try:
+        # CORREÇÃO 1: sep=None + engine='python' detecta automaticamente se é vírgula, ponto e vírgula, etc.
+        df = pd.read_csv(csv_path, sep=None, engine='python', encoding='utf-8-sig')
+        
+        # Limpa os nomes das colunas (remove espaços extras nas pontas)
+        df.columns = df.columns.str.strip()
+
+        # Conecta ao banco e envia o DataFrame completo
         conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+        
+        # if_exists='append': se a tabela já existir, ele adiciona os dados.
+        # index=False: não cria uma coluna extra para o índice do Pandas.
+        df.to_sql(table_name, conn, if_exists="append", index=False)
+        
+        print(f"Sucesso: {len(df)} registros importados com Pandas para a tabela '{table_name}'.")
 
-        # Se for um banco novo, precisamos criar a tabela antes de inserir os dados
-        if create_new_db:
-            # Cria colunas dinamicamente como TEXT (padrão seguro para CSV)
-            create_columns = ", ".join([f"{col} TEXT" for col in cleaned_columns])
-            create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({create_columns})"
-            cursor.execute(create_table_query)
-
-        with open(csv_path, mode="r", encoding="utf-8") as file:
-            csv_reader = csv.reader(file)
-            next(csv_reader)  # Pula a linha do cabeçalho do CSV
-            
-            # Lê todas as linhas restantes
-            data_to_insert = [row for row in csv_reader if row]
-
-        # Executa a inserção em lote
-        cursor.executemany(insert_query, data_to_insert)
-        conn.commit()
-        print(f"Sucesso: {len(data_to_insert)} registros importados do CSV para a tabela '{table_name}' no banco '{db_path.name}'.")
-
-    except sqlite3.Error as e:
-        print(f"Erro no banco de dados: {e}")
     except Exception as e:
-        print(f"Erro inesperado: {e}")
+        print(f"Erro na importação com Pandas no arquivo '{csv_name}': {e}")
     finally:
-        conn.close()
+        # Só fecha a conexão se ela realmente chegou a ser aberta
+        if conn is not None:
+            conn.close()
+
+
+def import_all_csv_files():
+    """
+    Importa todos os arquivos CSV da pasta CSV_FOLDER para o banco de dados central.
+    """
+    for csv_file in CSV_FOLDER.glob("*.csv"):
+        import_csv_to_table(csv_file.name)
 
 
 if __name__ == "__main__":
-    import_csv_to_table("searched_with_rising-searches_BR_20260308-1139_20260608-1139.csv", "searched_with_rising-searches_BR_20260308-1139_20260608-1139", ["query", "search_interest", "increase_percent"])
+    import_all_csv_files()
