@@ -75,7 +75,7 @@ with st.sidebar:
 
 # Título principal da página central
 st.title("📊 Chatbot Inteligente de Dados")
-st.markdown(f"Atualizado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}") 
+st.markdown(f"Backend atualizado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}") 
 
 
 # ==========================================
