@@ -9,6 +9,7 @@ podem ser esquecidas entre as recargas da página (como o histórico do chat).
 """
 
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 import streamlit as st
 from backend import ChatbotSQLBackend # Importa o nosso motor de inteligência criado no backend.py
@@ -76,8 +77,11 @@ with st.sidebar:
 
 # Título principal da página central
 st.title("📊 Chatbot Inteligente de Dados")
-fuso_local = ZoneInfo("America/Sao_Paulo") 
-st.caption(f"Backend atualizado em: {datetime.now(fuso_local).strftime('%d/%m/%Y %H:%M:%S')}")
+
+fuso_local = ZoneInfo("America/Sao_Paulo")
+if "hora_atualizacao_backend" not in st.session_state:
+    st.session_state.hora_atualizacao_backend = datetime.now(fuso_local).strftime('%d/%m/%Y %H:%M:%S')
+st.caption(f"Backend atualizado em: {st.session_state.hora_atualizacao_backend}")
 
 
 # ==========================================
