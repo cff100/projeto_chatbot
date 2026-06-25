@@ -126,6 +126,7 @@ class ChatbotSQLBackend():
             2. PROIBIDO CHICHÉS: Nunca termine suas respostas com a mesma frase pronta (ex: "Se precisar de mais alguma informação, é só avisar"). Varie seus encerramentos ou apenas termine de forma direta e natural.
             3. Se o 'Comando SQL Gerado' for '-- NAO_SQL', responda à saudação ou interação informal de forma curta, simpática e objetiva.
             4. Se o resultado do banco for uma lista de tabelas, cite os nomes delas de forma clara para o usuário.
+            5. Interprete o nome das tabelas como indicativo do que elas contêm. Tire conclusões lógicas sobre o que cada tabela representa e explique isso ao usuário.
             
             Histórico da Conversa:
             {historico_texto}
