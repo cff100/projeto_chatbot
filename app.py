@@ -8,7 +8,7 @@ novamente. Por isso, usamos o "session_state" para salvar coisas que não
 podem ser esquecidas entre as recargas da página (como o histórico do chat).
 """
 
-from pathlib import Path
+from datetime import datetime
 import streamlit as st
 from backend import ChatbotSQLBackend # Importa o nosso motor de inteligência criado no backend.py
 from paths import DATABASE_EXAMPLE, DATA_FOLDER # Importa o caminho do banco de exemplo de dados padronizado
@@ -75,7 +75,7 @@ with st.sidebar:
 
 # Título principal da página central
 st.title("📊 Chatbot Inteligente de Dados")
-st.markdown(f"Atualizado em: {st.session_state.get('last_update', 'N/A')}") 
+st.markdown(f"Atualizado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}") 
 
 
 # ==========================================
