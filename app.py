@@ -78,10 +78,13 @@ with st.sidebar:
 # Título principal da página central
 st.title("📊 Chatbot Inteligente de Dados")
 
-fuso_local = ZoneInfo("America/Sao_Paulo")
-if "hora_atualizacao_backend" not in st.session_state:
-    st.session_state.hora_atualizacao_backend = datetime.now(fuso_local).strftime('%d/%m/%Y %H:%M:%S')
-st.caption(f"Backend atualizado em: {st.session_state.hora_atualizacao_backend}")
+@st.cache_resource
+def obter_hora_deploy():
+    fuso_local = ZoneInfo("America/Sao_Paulo")
+    return datetime.now(fuso_local).strftime('%d/%m/%Y %H:%M:%S')
+# Recupera o horário fixo global
+hora_fixa = obter_hora_deploy()
+st.caption(f"Backend atualizado em: {hora_fixa}")
 
 
 # ==========================================
