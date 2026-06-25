@@ -75,6 +75,7 @@ with st.sidebar:
 
 # Título principal da página central
 st.title("📊 Chatbot Inteligente de Dados")
+st.markdown(f"Atualizado em: {st.session_state.get('last_update', 'N/A')}") 
 
 
 # ==========================================
