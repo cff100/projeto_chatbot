@@ -84,7 +84,7 @@ def obter_hora_deploy():
     return datetime.now(fuso_local).strftime('%d/%m/%Y %H:%M:%S')
 # Recupera o horário fixo global
 hora_fixa = obter_hora_deploy()
-st.caption(f"Backend atualizado em: {hora_fixa}")
+st.caption(f"Backend (app.py) atualizado em: {hora_fixa}")
 
 
 # ==========================================
