@@ -78,13 +78,13 @@ with st.sidebar:
 # Título principal da página central
 st.title("📊 Chatbot Inteligente de Dados")
 
-@st.cache_resource
-def obter_hora_deploy():
-    fuso_local = ZoneInfo("America/Sao_Paulo")
-    return datetime.now(fuso_local).strftime('%d/%m/%Y %H:%M:%S')
-# Recupera o horário fixo global
-hora_fixa = obter_hora_deploy()
-st.caption(f"Backend (app.py) atualizado em: {hora_fixa}")
+# @st.cache_resource
+# def obter_hora_deploy():
+#     fuso_local = ZoneInfo("America/Sao_Paulo")
+#     return datetime.now(fuso_local).strftime('%d/%m/%Y %H:%M:%S')
+# # Recupera o horário fixo global
+# hora_fixa = obter_hora_deploy()
+# st.caption(f"Backend (app.py) atualizado em: {hora_fixa}")
 
 
 # ==========================================
