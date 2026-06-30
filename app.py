@@ -47,28 +47,85 @@ if not opcoes_bancos:
 
 
 # ==========================================
-# 4. MENU LATERAL (SIDEBAR)
+# 4. MENU LATERAL (SIDEBAR) COM UPLOAD DE ARQUIVOS
 # ==========================================
-# Tudo que for colocado dentro do bloco 'with st.sidebar' vai 
-# aparecer em uma barra lateral esquerda da página.
-# [Ajuste técnico]: Posicionado antes da inicialização do backend para capturar a escolha do usuário.
+import sqlite3
+import pandas as pd
+import shutil
+from database_setup import import_csv_to_table  # Importa a função existente
+
 with st.sidebar:
     st.title("⚙️ Configurações do Sistema")
     
-    # Carrega dinamicamente a nossa lista 'opcoes_bancos'
+    # --- ÁREA DE UPLOAD DE NOVOS ARQUIVOS ---
+    st.subheader("📤 Adicionar Nova Base")
+    arquivo_enviado = st.file_uploader(
+        "Envie um arquivo .csv ou .db / .sqlite", 
+        type=["csv", "db", "sqlite"],
+        help="Arquivos .csv serão convertidos automaticamente em um novo banco .db"
+    )
+    
+    if arquivo_enviado is not None:
+        nome_arquivo = arquivo_enviado.name
+        caminho_salvamento = PASTA_BANCOS / nome_arquivo
+        
+        # Evitar reprocessamento contínuo se o arquivo já foi processado neste ciclo
+        chave_upload = f"processado_{nome_arquivo}"
+        if chave_upload not in st.session_state:
+            with st.spinner(f"Processando arquivo {nome_arquivo}..."):
+                try:
+                    # CASO 1: É um banco de dados SQLite pronto (.db ou .sqlite)
+                    if nome_arquivo.endswith(('.db', '.sqlite')):
+                        with open(caminho_salvamento, "wb") as f:
+                            f.write(arquivo_enviado.getbuffer())
+                        st.success(f"✅ Banco `{nome_arquivo}` adicionado!")
+                        
+                    # CASO 2: É um arquivo CSV
+                    elif nome_arquivo.endswith('.csv'):
+                        # Define o nome para o novo banco criado a partir do CSV
+                        nome_tabela = nome_arquivo.split(".")[0].replace("-", "_").replace(" ", "_")
+                        caminho_novo_db = PASTA_BANCOS / f"{nome_tabela}.db"
+                        
+                        # Lê o CSV enviado na memória usando o Pandas
+                        df = pd.read_csv(arquivo_enviado, sep=None, engine='python', encoding='utf-8-sig')
+                        df.columns = df.columns.str.strip()
+                        
+                        # Cria o novo arquivo de banco e insere os dados
+                        conn = sqlite3.connect(caminho_novo_db)
+                        df.to_sql(nome_tabela, conn, if_exists="append", index=False)
+                        conn.close()
+                        
+                        st.success(f"✅ CSV convertido em `{nome_tabela}.db` com sucesso!")
+                    
+                    st.session_state[chave_upload] = True
+                    # Força o recarregamento do app para atualizar a lista do selectbox instantaneamente
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Erro ao processar o arquivo: {e}")
+
+    st.markdown("---")
+    
+    # --- SELEÇÃO DO BANCO ATIVO ---
+    # Recarrega a lista dinamicamente para incluir o arquivo que acabou de subir
+    arquivos_encontrados = sorted(list(PASTA_BANCOS.glob("*.db")) + list(PASTA_BANCOS.glob("*.sqlite")))
+    opcoes_bancos = [arq.name for arq in arquivos_encontrados]
+    
+    # TRAVA DE SEGURANÇA: Se a pasta estiver vazia
+    if not opcoes_bancos:
+        st.error(f"⚠️ Nenhum banco encontrado. Faça o upload de um arquivo acima para começar.")
+        st.stop()
+        
     banco_selecionado_nome = st.selectbox(
         "Selecione a Base de Dados:",
         options=opcoes_bancos,
         help="Escolha qual banco de dados do seu repositório você deseja consultar agora."
     )
     
-    # Montamos o caminho completo unindo a pasta ao arquivo selecionado
-    # Exemplo final: Path("databases/vendas.db")
     caminho_banco_completo = PASTA_BANCOS / banco_selecionado_nome
     
     st.markdown("---")
     if st.button("🗑️ Limpar Conversa"):
-        # Reseta o histórico voltando para a saudação limpa
         st.session_state.mensagens = [{
             "role": "assistant", 
             "content": f"Olá! Sou seu assistente. Estou conectado à base `{banco_selecionado_nome}`. O que deseja consultar?"
