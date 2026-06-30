@@ -40,6 +40,12 @@ class ChatbotSQLBackend():
         db_safe_path = Path(database_path).resolve().as_posix()
 
         self.db = SQLDatabase.from_uri(f"sqlite:///{db_safe_path}")
+
+        # Teste rápido de sanidade estrutural: garante que o arquivo é um SQLite legível
+        try:
+            _ = self.db.get_usable_table_names()
+        except Exception as e:
+            raise ValueError(f"O arquivo fornecido não possui tabelas válidas ou está corrompido. Detalhes: {e}")
         
         # 2. INICIALIZANDO O MODELO DE IA (LLM)
 
